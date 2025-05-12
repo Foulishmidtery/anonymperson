@@ -1,0 +1,52 @@
+# Tor configuration file for anonymperson on Kali Linux 2025
+# Adapted from user-provided torrc.txt to support Proton VPN Free, IPFS, Pi-hole, and dynamic protection
+
+# Virtual address network for .onion routing
+VirtualAddrNetwork 10.192.0.0/10
+
+# SOCKS5 port for IPFS and Privoxy, with isolation for enhanced privacy
+SocksPort 127.0.0.1:9050 IsolateClientAddr IsolateSOCKSAuth IsolateClientProtocol IsolateDestPort IsolateDestAddr
+
+# Control port for dynamic circuit rotation via dynamic_tor.sh
+ControlPort 9051
+CookieAuthentication 1
+
+# Automatically map .onion and .exit addresses
+AutomapHostsOnResolve 1
+AutomapHostsSuffixes .exit,.onion
+
+# Run Tor as a daemon
+RunAsDaemon 1
+
+# Enable sandbox for additional security
+Sandbox 1
+
+# Use hardware acceleration for cryptographic operations when available
+HardwareAccel 1
+
+# Socket safety hacks to prevent misconfiguration and leaks
+TestSocks 1
+WarnUnsafeSocks 1
+AllowNonRFC953Hostnames 0
+AllowDotExit 0
+WarnPlaintextPorts 23,109,110,143,80
+
+# DNS safety hacks to prevent internal address resolution
+ClientRejectInternalAddresses 1
+
+# Circuit management for performance and privacy
+# NewCircuitPeriod: Create a new circuit every 40 seconds
+NewCircuitPeriod 40
+# MaxCircuitDirtiness: Keep circuits alive for up to 600 seconds
+MaxCircuitDirtiness 600
+# MaxClientCircuitsPending: Allow up to 48 pending circuits
+MaxClientCircuitsPending 48
+# UseEntryGuards: Use consistent entry nodes for better anonymity
+UseEntryGuards 1
+UseEntryGuardsAsDirGuards 1
+# EnforceDistinctSubnets: Ensure nodes in a circuit are from different subnets
+EnforceDistinctSubnets 1
+
+# Data and log directories
+DataDirectory /var/lib/tor
+Log notice file /var/log/tor/notices.log

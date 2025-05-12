@@ -1,0 +1,11 @@
+# Ignore temporary files
+*.swp
+*.bak
+*.tmp
+
+# Ignore logs
+*.log
+
+# Ignore build artifacts
+*.o
+*.a

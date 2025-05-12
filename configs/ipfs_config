@@ -1,0 +1,36 @@
+{
+  "Identity": {},
+  "Addresses": {
+    "Swarm": [
+      "/ip4/0.0.0.0/tcp/4001",
+      "/ip6/::/tcp/4001"
+    ],
+    "Announce": [],
+    "NoAnnounce": [],
+    "API": "/ip4/127.0.0.1/tcp/5001",
+    "Gateway": "/ip4/127.0.0.1/tcp/8080"
+  },
+  "Bootstrap": [
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+    "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa"
+  ],
+  "Datastore": {
+    "StorageMax": "10GB",
+    "GCPeriod": "1h"
+  },
+  "Gateway": {
+    "HTTPHeaders": {},
+    "RootRedirect": ""
+  },
+  "Swarm": {
+    "ConnMgr": {
+      "LowWater": 200,
+      "HighWater": 500
+    },
+    "Transports": {
+      "Network": {
+        "Socks5Proxy": "socks5://127.0.0.1:9050"
+      }
+    }
+  }
+}

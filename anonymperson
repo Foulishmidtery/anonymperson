@@ -1,0 +1,325 @@
+#!/bin/bash
+
+# anonymperson - Anonymity automation script for Kali Linux 2025 with Proton VPN Free, Pi-hole, and IPFS
+# Adapted from https://github.com/HiroshiManRise/anonym8
+
+# Default network interface
+INTERFACE="eth0"
+
+# Proton VPN Free credentials (replace with your credentials)
+PROTONVPN_USER="NsObwvgdCmu5fNYA"
+PROTONVPN_PASS="3bovzCgOhOy8Ro8uBxFv92Npymbz34wo"
+
+# Check if running as root
+if [ "$(id -u)" != "0" ]; then
+    echo "This script must be run as root" 1>&2
+    exit 1
+fi
+
+# Function to check IP
+check_ip() {
+    curl -s https://api.ipify.org
+}
+
+# Function to start Proton VPN Free
+start_vpn() {
+    openvpn --config /etc/openvpn/client/us-free-22.protonvpn.tcp.ovpn --auth-user-pass <(echo -e "$PROTONVPN_USER\n$PROTONVPN_PASS") --daemon
+    sleep 5
+    if ip a | grep -q tun0; then
+        echo "Proton VPN Free started"
+    else
+        echo "Failed to start Proton VPN Free"
+        exit 1
+    fi
+}
+
+# Function to stop Proton VPN Free
+stop_vpn() {
+    killall openvpn
+    echo "Proton VPN Free stopped"
+}
+
+# Function to check Proton VPN Free status
+status_vpn() {
+    if ip a | grep -q tun0; then
+        echo "Proton VPN Free is running"
+    else
+        echo "Proton VPN Free is not running"
+    fi
+}
+
+# Function to enable dynamic VPN server rotation
+dynamic_vpn() {
+    /usr/local/bin/dynamic_vpn.sh &
+    echo "Dynamic Proton VPN Free server rotation enabled"
+}
+
+# Function to start Tor
+start_tor() {
+    service tor start
+    echo "Tor started (SOCKS5 at 127.0.0.1:9050)"
+}
+
+# Function to stop Tor
+stop_tor() {
+    service tor stop
+    echo "Tor stopped"
+}
+
+# Function to change Tor identity
+change_tor() {
+    service tor reload
+    echo "Tor identity changed"
+}
+
+# Function to enable dynamic Tor rotation
+dynamic_tor() {
+    /usr/local/bin/dynamic_tor.sh &
+    echo "Dynamic Tor circuit rotation enabled"
+}
+
+# Function to check Tor status
+status_tor() {
+    service tor status
+}
+
+# Function to start Privoxy
+start_privoxy() {
+    service privoxy start
+    echo "Privoxy started"
+}
+
+# Function to stop Privoxy
+stop_privoxy() {
+    service privoxy stop
+    echo "Privoxy stopped"
+}
+
+# Function to check Privoxy status
+status_privoxy() {
+    service privoxy status
+}
+
+# Function to start I2P
+start_i2p() {
+    service i2p start
+    echo "I2P started"
+}
+
+# Function to stop I2P
+stop_i2p() {
+    service i2p stop
+    echo "I2P stopped"
+}
+
+# Function to check I2P status
+status_i2p() {
+    service i2p status
+}
+
+# Function to start IPFS
+start_ipfs() {
+    /usr/local/bin/ipfs_manager.sh start
+    echo "IPFS daemon started"
+}
+
+# Function to stop IPFS
+stop_ipfs() {
+    /usr/local/bin/ipfs_manager.sh stop
+    echo "IPFS daemon stopped"
+}
+
+# Function to check IPFS status
+status_ipfs() {
+    /usr/local/bin/ipfs_manager.sh status
+}
+
+# Function to share file via IPFS
+share_ipfs() {
+    if [ -z "$2" ]; then
+        echo "Usage: anonymperson share_ipfs <file_path>"
+        exit 1
+    fi
+    /usr/local/bin/ipfs_manager.sh share "$2"
+}
+
+# Function to get file from IPFS
+get_ipfs() {
+    if [ -z "$2" ]; then
+        echo "Usage: anonymperson get_ipfs <ipfs_hash>"
+        exit 1
+    fi
+    /usr/local/bin/ipfs_manager.sh get "$2"
+}
+
+# Function to start MAC changer
+start_mac() {
+    macchanger -r $INTERFACE
+    echo "MAC address changed"
+}
+
+# Function to stop MAC changer (restore original)
+stop_mac() {
+    macchanger -p $INTERFACE
+    echo "MAC address restored"
+}
+
+# Function to check MAC status
+status_mac() {
+    macchanger -s $INTERFACE
+}
+
+# Function to start Nyx
+start_nyx() {
+    nyx
+}
+
+# Function to wipe cache
+wipe_cache() {
+    bleachbit --clean system.cache system.localizations system.trash
+    echo "Cache wiped"
+}
+
+# Function to change hostname
+change_hostname() {
+    NEW_HOSTNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)
+    hostnamectl set-hostname $NEW_HOSTNAME
+    echo "Hostname changed to $NEW_HOSTNAME"
+}
+
+# Function to restore hostname
+restore_hostname() {
+    hostnamectl set-hostname wkali
+    echo "Hostname restored to wkali"
+}
+
+# Function to check hostname
+status_hostname() {
+    hostname
+}
+
+# Main command handler
+case "$1" in
+    start)
+        start_vpn
+        start_tor
+        start_privoxy
+        start_ipfs
+        start_mac
+        ;;
+    stop)
+        stop_tor
+        stop_privoxy
+        stop_ipfs
+        stop_mac
+        stop_vpn
+        ;;
+    change)
+        change_tor
+        ;;
+    dynamic)
+        dynamic_tor
+        ;;
+    dynamic_vpn)
+        dynamic_vpn
+        ;;
+    status)
+        status_tor
+        ;;
+    status_ip)
+        echo "Current IP: $(check_ip)"
+        ;;
+    start_vpn)
+        start_vpn
+        ;;
+    stop_vpn)
+        stop_vpn
+        ;;
+    status_vpn)
+        status_vpn
+        ;;
+    start_ipfs)
+        start_ipfs
+        ;;
+    stop_ipfs)
+        stop_ipfs
+        ;;
+    status_ipfs)
+        status_ipfs
+        ;;
+    share_ipfs)
+        share_ipfs "$@"
+        ;;
+    get_ipfs)
+        get_ipfs "$@"
+        ;;
+    start_i2p)
+        start_i2p
+        ;;
+    stop_i2p)
+        stop_i2p
+        ;;
+    status_i2p)
+        status_i2p
+        ;;
+    start_privoxy)
+        start_privoxy
+        ;;
+    stop_privoxy)
+        stop_privoxy
+        ;;
+    status_privoxy)
+        status_privoxy
+        ;;
+    start_mac)
+        start_mac
+        ;;
+    stop_mac)
+        stop_mac
+        ;;
+    status_mac)
+        status_mac
+        ;;
+    start_nyx)
+        start_nyx
+        ;;
+    wipe)
+        wipe_cache
+        ;;
+    change_hostname)
+        change_hostname
+        ;;
+    restore_hostname)
+        restore_hostname
+        ;;
+    status_hostname)
+        status_hostname
+        ;;
+    anON)
+        start_vpn
+        start_tor
+        start_privoxy
+        start_ipfs
+        start_mac
+        change_hostname
+        dynamic_tor
+        dynamic_vpn
+        echo "Anonymity ON (Proton VPN Free + Tor + Pi-hole + IPFS)"
+        ;;
+    anOFF)
+        stop_tor
+        stop_privoxy
+        stop_ipfs
+        stop_mac
+        stop_vpn
+        restore_hostname
+        killall dynamic_tor.sh dynamic_vpn.sh
+        echo "Anonymity OFF"
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|change|dynamic|dynamic_vpn|status|status_ip|start_vpn|stop_vpn|status_vpn|start_ipfs|stop_ipfs|status_ipfs|share_ipfs|get_ipfs|start_i2p|stop_i2p|status_i2p|start_privoxy|stop_privoxy|status_privoxy|start_mac|stop_mac|status_mac|start_nyx|wipe|change_hostname|restore_hostname|status_hostname|anON|anOFF}"
+        exit 1
+        ;;
+esac
+
+exit 0
