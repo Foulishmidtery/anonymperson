@@ -1,10 +1,20 @@
 #!/bin/bash
-
 # Dynamic Proton VPN Free server script for anonymperson
-OVPN_FILE="/etc/openvpn/client/us-free-22.protonvpn.tcp.ovpn"
-PROTONVPN_USER="NsObwvgdCmu5fNYA"
-PROTONVPN_PASS="3bovzCgOhOy8Ro8uBxFv92Npymbz34wo"
 
-killall openvpn
-openvpn --config "$OVPN_FILE" --auth-user-pass <(echo -e "$PROTONVPN_USER\n$PROTONVPN_PASS") --daemon
-echo "Connected to $OVPN_FILE"
+# Load ProtonVPN credentials
+CONFIG_FILE="/etc/anonymperson/protonvpn_credentials.conf"
+if [ -f "$CONFIG_FILE" ]; then
+  source "$CONFIG_FILE"
+else
+  echo "Error: ProtonVPN credentials file ($CONFIG_FILE) not found."
+  exit 1
+fi
+
+OVPN_FILE="/etc/openvpn/client/us-free-22.protonvpn.tcp.ovpn"
+
+while true; do
+  killall openvpn 2>/dev/null || true
+  openvpn --config "$OVPN_FILE" --auth-user-pass <(echo -e "$PROTONVPN_USERNAME\n$PROTONVPN_PASSWORD") --daemon
+  echo "Connected to $OVPN_FILE"
+  sleep 3600 # Rotate every hour
+done

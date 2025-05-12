@@ -1,11 +1,12 @@
 # Ignore temporary files
-*.swp
-*.bak
 *.tmp
+*.bak
+*.swp
 
-# Ignore logs
+# Ignore sensitive files
+protonvpn_credentials.conf
+*.ovpn
 *.log
 
-# Ignore build artifacts
-*.o
-*.a
+# Ignore IPFS data
+.ipfs/
