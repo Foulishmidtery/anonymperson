@@ -2,11 +2,27 @@
 *.tmp
 *.bak
 *.swp
+*.log
+install_error.log
+setup_error.log
 
 # Ignore sensitive files
 protonvpn_credentials.conf
 *.ovpn
-*.log
+configs/us-free-22.protonvpn.tcp.ovpn
 
-# Ignore IPFS data
+# Ignore IPFS data and temporary files
 .ipfs/
+go-ipfs/
+ipfs_config
+configs/ipfs_config
+
+# Ignore Docker/Pi-hole temporary files
+docker-compose.yml
+*.pid
+*.sock
+
+# Ignore local configuration and cache
+*.cache
+*.local
+*.config

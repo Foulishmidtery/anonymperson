@@ -29,6 +29,7 @@
 - **Koneksi Internet**: Diperlukan untuk mengunduh dependensi dan konfigurasi.
 - **Akun ProtonVPN Free**: Daftar di [ProtonVPN](https://protonvpn.com/free-vpn) untuk mendapatkan kredensial.
 - **Ruang Disk**: Minimal 5 GB untuk Docker, IPFS, dan dependensi lainnya.
+- **Git**: Untuk mengkloning repositori (`sudo apt install git`).
 
 ---
 
@@ -37,17 +38,39 @@
 Ikuti langkah-langkah berikut untuk menginstal Anonymperson di Kali Linux 2025.1.
 
 ### 1. Clone Repository
+Kloning repositori ke direktori pilihan Anda (misalnya, `~/Downloads`):
 ```bash
+mkdir -p ~/Downloads
+cd ~/Downloads
 git clone https://github.com/Foulishmidtery/anonymperson.git
 cd anonymperson
 ```
 
-### 2. Update ProtonVPN Credentials
-Skrip menggunakan file kredensial untuk ProtonVPN. Edit file berikut:
+### 2. Run Setup Script
+Jalankan `setup_anonymperson.sh` untuk membuat struktur direktori proyek (default: `/home/$USER/anonymperson`), menyalin file, mengatur izin, dan menginstal dependensi:
+```bash
+sudo chmod +x setup_anonymperson.sh
+sudo ./setup_anonymperson.sh
+```
+
+Skrip akan:
+- Membuat direktori proyek di `/home/$USER/anonymperson` (atau lokasi kustom jika `ANONYMPERSON_DEST` diatur, misalnya, `export ANONYMPERSON_DEST=/opt/anonymperson`).
+- Menyalin file utama (`INSTALL.sh`, `anonymperson`, dll.) dan file konfigurasi (`torrc`, `privoxy.config`, dll.).
+- Mengatur izin file.
+- Menjalankan `INSTALL.sh` untuk menginstal dependensi (`tor`, `privoxy`, `openvpn`, `macchanger`, `nyx`, `curl`, `bleachbit`, `docker.io`, dll.), menyiapkan Pi-hole sebagai container Docker tanpa kata sandi web, serta menginstal I2P, ProtonVPN CLI, dan IPFS.
+
+Untuk menggunakan lokasi kustom:
+```bash
+export ANONYMPERSON_DEST=/opt/anonymperson
+sudo ./setup_anonymperson.sh
+```
+
+### 3. Update ProtonVPN Credentials
+Skrip `setup_anonymperson.sh` membuat file kredensial placeholder. Edit file untuk menambahkan kredensial ProtonVPN Anda:
 ```bash
 sudo nano /etc/anonymperson/protonvpn_credentials.conf
 ```
-Ganti placeholder dengan kredensial ProtonVPN Anda:
+Ganti placeholder dengan kredensial Anda:
 ```bash
 PROTONVPN_USERNAME="your_actual_username"
 PROTONVPN_PASSWORD="your_actual_password"
@@ -57,30 +80,28 @@ Simpan dan atur izin:
 sudo chmod 600 /etc/anonymperson/protonvpn_credentials.conf
 ```
 
-### 3. Verify Configuration Files
-Pastikan direktori `configs/` berisi file berikut:
-- `torrc`: Konfigurasi Tor (gunakan default dari `/etc/tor/torrc` jika tidak ada).
-- `privoxy.config`: Konfigurasi Privoxy dengan `forward-socks5 / 127.0.0.1:9050 .`.
-- `us-free-22.protonvpn.tcp.ovpn`: File konfigurasi OpenVPN dari ProtonVPN Free (unduh dari akun Anda).
-- `ipfs_config`: Konfigurasi IPFS (dihasilkan oleh `ipfs init` jika tidak ada).
+### 4. Verify Configuration Files
+Pastikan direktori `configs/` di direktori proyek (misalnya, `/home/$USER/anonymperson/configs/`) berisi file berikut:
+- `torrc`: Konfigurasi Tor dengan minimal:
+  ```bash
+  SocksPort 9050
+  DataDirectory /var/lib/tor
+  ```
+- `privoxy.config`: Konfigurasi Privoxy dengan:
+  ```bash
+  forward-socks5 / 127.0.0.1:9050 .
+  listen-address 127.0.0.1:8118
+  ```
+- `us-free-22.protonvpn.tcp.ovpn`: File konfigurasi OpenVPN dari ProtonVPN Free (unduh dari [ProtonVPN Dashboard](https://account.protonvpn.com), pilih server gratis, TCP).
+- `ipfs_config`: Konfigurasi IPFS (dihasilkan oleh `ipfs init` atau gunakan default).
 
-Jika file tidak ada, buat atau unduh sesuai kebutuhan.
-
-### 4. Run Installation Script
-Jalankan skrip instalasi untuk mengatur dependensi, Docker, Pi-hole, dan layanan lainnya:
-```bash
-sudo chmod +x INSTALL.sh
-sudo ./INSTALL.sh
-```
-
-Skrip akan:
-- Menginstal dependensi (`tor`, `privoxy`, `openvpn`, `macchanger`, `nyx`, `curl`, `bleachbit`, `docker.io`, dll.).
-- Menyiapkan Pi-hole sebagai container Docker tanpa kata sandi web.
-- Menginstal I2P, ProtonVPN CLI, dan IPFS.
-- Mengatur konfigurasi dan izin file.
-- Mengaktifkan layanan Tor dan Privoxy.
+Jika file tidak ada, lihat bagian **Configuration Files** di bawah untuk membuatnya.
 
 ### 5. Verify Installation
+Pindah ke direktori proyek:
+```bash
+cd ~/anonymperson
+```
 Periksa status layanan:
 ```bash
 sudo systemctl status tor
@@ -94,7 +115,7 @@ protonvpn-cli --version
 
 ## Usage
 
-Jalankan perintah berikut dengan `sudo` untuk mengelola anonimitas:
+Jalankan perintah berikut dengan `sudo` dari direktori proyek (misalnya, `/home/$USER/anonymperson`) untuk mengelola anonimitas:
 
 ### Basic Commands
 - **Aktifkan Anonimitas**:
@@ -202,6 +223,52 @@ Jalankan perintah berikut dengan `sudo` untuk mengelola anonimitas:
 
 ---
 
+## Configuration Files
+
+Jika file konfigurasi di `configs/` tidak tersedia, buat dengan konten berikut:
+
+- **torrc**:
+  ```bash
+  SocksPort 9050
+  DataDirectory /var/lib/tor
+  ```
+
+- **privoxy.config**:
+  ```bash
+  forward-socks5 / 127.0.0.1:9050 .
+  listen-address 127.0.0.1:8118
+  ```
+
+- **us-free-22.protonvpn.tcp.ovpn**:
+  - Unduh dari akun ProtonVPN Free di [ProtonVPN Dashboard](https://account.protonvpn.com).
+  - Pilih server gratis (misalnya, US-Free#22) dan unduh file `.ovpn` untuk TCP.
+  - Salin ke `configs/us-free-22.protonvpn.tcp.ovpn`.
+
+- **ipfs_config**:
+  - Jalankan `ipfs init` untuk menghasilkan konfigurasi default:
+    ```bash
+    ipfs init
+    cp ~/.ipfs/config configs/ipfs_config
+    ```
+  - Contoh konten (dis簡化):
+    ```json
+    {
+      "Identity": {
+        "PeerID": "..."
+      },
+      "Datastore": {
+        "StorageMax": "10GB"
+      },
+      "Addresses": {
+        "Swarm": ["/ip4/0.0.0.0/tcp/4001"],
+        "API": "/ip4/127.0.0.1/tcp/5001",
+        "Gateway": "/ip4/127.0.0.1/tcp/8080"
+      }
+    }
+    ```
+
+---
+
 ## Security Notes
 
 - **ProtonVPN Credentials**: Kredensial disimpan di `/etc/anonymperson/protonvpn_credentials.conf` dengan izin ketat (`chmod 600`). Jangan bagikan file ini.
@@ -235,7 +302,7 @@ Jalankan perintah berikut dengan `sudo` untuk mengelola anonimitas:
   ```
   Pastikan port 53, 80, dan 443 tidak digunakan:
   ```bash
-  sudo netstat -tulnp | grep ':53\|:80\|:443'
+  sudo ss -tuln | grep ':53\|:80\|:443'
   ```
   Hentikan layanan yang berkonflik:
   ```bash
@@ -269,8 +336,12 @@ Jalankan perintah berikut dengan `sudo` untuk mengelola anonimitas:
   sudo systemctl stop dnsmasq
   ```
 
-- **Laporan Bug**:
-  Laporkan masalah di [GitHub Issues](https://github.com/Foulishmidtery/anonymperson/issues) dengan log kesalahan.
+- **Setup Gagal**:
+  Periksa log kesalahan:
+  ```bash
+  cat ~/anonymperson/install_error.log
+  ```
+  Laporkan masalah di [GitHub Issues](https://github.com/Foulishmidtery/anonymperson/issues).
 
 ---
 
